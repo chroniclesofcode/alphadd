@@ -28,3 +28,13 @@ than the range of the second.
 Usually I like to use a build tool for my C++ projects, but I know that may turn people off since you have to download CMake or 
 whatever. All you need is g++ in your command line and you can run this program with no hassles with a simple compilation - as a
 bonus - it will all be in one file so there's even less work (not necessarily best practices).
+
+```
+g++ -o alphadd main.cpp -std=c++17
+```
+
+then run
+
+```
+./alphadd
+```
