@@ -5,6 +5,8 @@
 #include <random>
 #include <algorithm>
 #include <thread>
+#include <stdio.h>
+#include <cctype>
 
 using namespace std::chrono;
 
@@ -266,9 +268,12 @@ void run() {
         std::cin >> inp;
         // Wrong answer, add to database
         int incorrect_ct = 0;
+        std::string tmp;
         while (ans != inp) {
+            printf("\a");
             std::cout << "\n     Incorrect    \n\n      ";
-            std::cin >> inp;
+            std::cin >> tmp;
+            inp = std::stoi(tmp);
             incorrect_ct++;
         }
     }
