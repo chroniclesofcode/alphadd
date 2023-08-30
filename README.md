@@ -23,6 +23,7 @@ Modify config.txt:
 than the range of the second.
 - the fourth line will contain 4 integers, the range of the first number in multiplication, and the range of the second.
 - The fifth line will contain 4 integers, the range of the first number in division, and the range of the second.
+- The sixth line will contain 1 integer, the amount of time one playthrough will take in seconds
 
 # How to run
 Usually I like to use a build tool for my C++ projects, but I know that may turn people off since you have to download CMake or 
