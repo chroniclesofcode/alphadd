@@ -1,5 +1,15 @@
 #include <iostream>
 
+class Alphadd {
+    int hash; // Used to determine filenames for data
+    int add1, add2;
+    int sub1, sub2, subdiff;
+    int mul1, mul2;
+    int div1, div2;
+};
+
+Alphadd alpha;
+
 void intro() {
     std::cout << "Welcome to Alphadd, an arithmetic training program.\n";
 }
@@ -18,7 +28,7 @@ void configure() {
     std::cout << "... End configure\n";
     std::cout << "Processing historical data..." << std::endl;
     processHistory();
-    std::cout << "... End process" << std::endl;
+    std::cout << "... End processing" << std::endl;
 }
 
 
