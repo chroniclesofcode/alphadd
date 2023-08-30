@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <random>
+#include <algorithm>
 #include <thread>
 
 using namespace std::chrono;
@@ -14,44 +15,85 @@ using namespace std::chrono;
 class AddGenerator {
     int add1, add2, add3, add4;
     std::mt19937 rng;
+    std::uniform_int_distribution<> distr1, distr2;
 public:
     AddGenerator() = default;
-    AddGenerator(int a1, int a2, int a3, int a4) : add1{a1}, add2{a2}, add3{a3}, add4{a4}, rng{std::mt19937(std::random_device()())} {}
+    AddGenerator(int a1, int a2, int a3, int a4) : add1{a1}, add2{a2}, add3{a3}, add4{a4}, 
+                                                   rng{std::mt19937(std::random_device()())},
+                                                   distr1{std::uniform_int_distribution<>(a1, a2)},
+                                                   distr2{std::uniform_int_distribution<>(a3, a4)} {}
     void printRange() {
         std::cout << "  ranges: (" << add1 << ", " << add2 << ") + " << "(" << add3 << ", " << add4 << ")\n";
+    }
+
+    std::vector<int> generate() {
+        int n1 = distr1(rng);
+        int n2 = distr2(rng);
+        return { n1, n2, n1 + n2 };
     }
 };
 
 class SubGenerator {
     int sub1, sub2, sub3, sub4, subdiff;
     std::mt19937 rng;
+    std::uniform_int_distribution<> distr1, distr2;
 public:
     SubGenerator() = default;
-    SubGenerator(int s1, int s2, int s3, int s4, int sd) : sub1{s1}, sub2{s2}, sub3{s3}, sub4{s4}, subdiff{sd}, rng{std::mt19937(std::random_device()())} {}
+    SubGenerator(int s1, int s2, int s3, int s4, int sd) : sub1{s1}, sub2{s2}, sub3{s3}, sub4{s4}, subdiff{sd}, 
+                                                           rng{std::mt19937(std::random_device()())} {
+        distr2 = std::uniform_int_distribution<>(s3, s4);
+    }
     void printRange() {
         std::cout << "  ranges: (" << sub1 << ", " << sub2 << ") - " << "(" << sub3 << ", " << sub4 << ")\n";
+    }
+
+    std::vector<int> generate() {
+        int n2 = distr2(rng);
+        distr1 = std::uniform_int_distribution<>(std::max(sub1, n2+subdiff), sub2);
+        int n1 = distr1(rng);
+        return { n1, n2, n1 - n2 };
     }
 };
 
 class MulGenerator {
     int mul1, mul2, mul3, mul4;
     std::mt19937 rng;
+    std::uniform_int_distribution<> distr1, distr2;
 public:
     MulGenerator() = default;
-    MulGenerator(int m1, int m2, int m3, int m4) : mul1{m1}, mul2{m2}, mul3{m3}, mul4{m4}, rng{std::mt19937(std::random_device()())} {}
+    MulGenerator(int m1, int m2, int m3, int m4) : mul1{m1}, mul2{m2}, mul3{m3}, mul4{m4}, 
+                                                   rng{std::mt19937(std::random_device()())},
+                                                   distr1{std::uniform_int_distribution<>(m1, m2)},
+                                                   distr2{std::uniform_int_distribution<>(m3, m4)} {}
     void printRange() {
         std::cout << "  ranges: (" << mul1 << ", " << mul2 << ") X " << "(" << mul3 << ", " << mul4 << ")\n";
+    }
+
+    std::vector<int> generate() {
+        int n1 = distr1(rng);
+        int n2 = distr2(rng);
+        return { n1, n2, n1 * n2 };
     }
 };
 
 class DivGenerator {
     int div1, div2, div3, div4;
     std::mt19937 rng;
+    std::uniform_int_distribution<> distr1, distr2;
 public:
     DivGenerator() = default;
-    DivGenerator(int d1, int d2, int d3, int d4) : div1{d1}, div2{d2}, div3{d3}, div4{d4}, rng{std::mt19937(std::random_device()())} {}
+    DivGenerator(int d1, int d2, int d3, int d4) : div1{d1}, div2{d2}, div3{d3}, div4{d4}, 
+                                                   rng{std::mt19937(std::random_device()())},
+                                                   distr1{std::uniform_int_distribution<>(d1, d2)},
+                                                   distr2{std::uniform_int_distribution<>(d3, d4)} {}
     void printRange() {
         std::cout << "  ranges: (" << div1 << ", " << div2 << ") / " << "(" << div3 << ", " << div4 << ")\n";
+    }
+
+    std::vector<int> generate() {
+        int n1 = distr1(rng);
+        int n2 = distr2(rng);
+        return { n1 * n2, n2, n1 };
     }
 };
 
@@ -69,6 +111,7 @@ public:
     int time_length;
 
     std::mt19937 rng;
+    std::uniform_int_distribution<> distr;
 
     Alphadd() = default; // Default
 
@@ -76,7 +119,11 @@ public:
             int s4, int sd, int m1, int m2, int m3, int m4, int d1, int d2, int d3, int d4, int tlen) : hash{hash}, ops{o},
             adder{AddGenerator(a1, a2, a3, a4)}, subber{SubGenerator(s1, s2, s3, s4, sd)},
             muller{MulGenerator(m1, m2, m3, m4)}, diver{DivGenerator(d1, d2, d3, d4)}, time_length{tlen},
-            rng{std::mt19937(std::random_device()())} { }
+            rng{std::mt19937(std::random_device()())}, distr{std::uniform_int_distribution<>(0, o.size()-1)} { }
+
+    char getRandomOperator() {
+        return ops[distr(rng)];
+    }
 };
 
 /*
@@ -110,7 +157,10 @@ void processSettings() {
     fin.close();
 
     // Input validation
-    if (s1 > s2 || s3 > s4) {
+    if (!op1 && !op2 && !op3 && !op4) {
+        std::cout << "Please input at least one possible operation (add, sub, mul, div)\n";
+        exit(1);
+    } else if (s1 > s2 || s3 > s4) {
         std::cout << "Wrong ranges for subtraction (must be small -> large)\n";
         exit(1);
     } else if (sdiff < 0) {
@@ -186,15 +236,41 @@ void confirm() {
     std::cout << "To confirm these settings and start Alphadd, please press ENTER" << std:: endl;
     char nl;
     std::cin.get(nl);
-    std::cout << "\n\n\n";
 }
 
 // Runs the main loop to generate questions and receive input
 void run() {
     time_point<steady_clock> start_time = steady_clock::now();
 
+    int ans = 0, inp = 0;
     while (duration_cast<seconds>(steady_clock::now() - start_time).count() < alpha.time_length) {
-        
+        char op = alpha.getRandomOperator();
+        std::vector<int> question;
+        if (op == '+') {
+            question = alpha.adder.generate();
+        } else if (op == '-') {
+            question = alpha.subber.generate();
+        } else if (op == '*') {
+            question = alpha.muller.generate();
+        } else if (op == '/') {
+            question = alpha.diver.generate();
+        }
+
+        if (question.size() != 3) {
+            std::cout << "ERROR: Incorrect number of elements in question!\n";
+            exit(1);
+        }
+        ans = question[2];
+        std::cout << "\n----  " << question[0] << ' ' << op << ' ' << question[1] << "  ----\n\n";
+        std::cout << "      ";
+        std::cin >> inp;
+        // Wrong answer, add to database
+        int incorrect_ct = 0;
+        while (ans != inp) {
+            std::cout << "\n     Incorrect    \n\n      ";
+            std::cin >> inp;
+            incorrect_ct++;
+        }
     }
 }
 

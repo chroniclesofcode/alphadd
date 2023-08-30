@@ -22,7 +22,7 @@ Modify config.txt:
 - the third line will contain 5 integers, the range of the first number in subtraction, and the range of the second. The 5th number represents the minimum difference between your two ranges. E.g. if you want to make sure you don't get any differences (answers) of 100, please set it as 100. Now every pair of numbers will be at least 100 apart. If you don't configure it properly, the program will break, so if you're worried set it to something small like 0-3. Please note that the program will throw an error if the range of the first number (largest) is smaller
 than the range of the second, or if the different is not as large as the min subtraction difference.
 - the fourth line will contain 4 integers, the range of the first number in multiplication, and the range of the second.
-- The fifth line will contain 4 integers, the range of the first number in division, and the range of the second.
+- The fifth line will contain 4 integers, first is the the range of the SOLUTION -> the number you will type in, second is the range of the DIVISOR. What will happen is we will do solution * divisor, then that will be your dividend (the number on the left). 
 - The sixth line will contain 1 integer, the amount of time one playthrough will take in seconds
 
 # How to run
