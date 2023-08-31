@@ -49,7 +49,7 @@ whatever. All you need is g++ in your command line and you can run this program 
 bonus - it will all be in one file so there's even less work (not necessarily best practices).
 
 ```
-g++ -std=c++17 -o alphadd main.cpp
+g++ -std=c++17 -O3 -o alphadd main.cpp
 ```
 
 then run

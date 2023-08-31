@@ -11,6 +11,7 @@
 #include <set>
 #include <array>
 #include <map>
+#include <functional>
 
 using namespace std::chrono;
 
@@ -123,12 +124,12 @@ public:
 
     bool run_prog;
 
-    long long run_tot;
+    long long average;
     int num_elems;
     
     // Historical data store
     // array = { difficulty, firstnum, rightnum, answer, operator(char) }
-    std::multiset<std::array<int,5>> data;
+    std::multiset<std::array<int,5>, std::greater<std::array<int,5>>> data;
     // Maps firstnum, rightnum, operator to the difficulty
     std::map<std::array<int, 3>, int> q_diff;
 
@@ -139,7 +140,7 @@ public:
             adder{AddGenerator(a1, a2, a3, a4)}, subber{SubGenerator(s1, s2, s3, s4, sd)},
             muller{MulGenerator(m1, m2, m3, m4)}, diver{DivGenerator(d1, d2, d3, d4)}, time_length{tlen},
             rng{std::mt19937(std::random_device()())}, distr{std::uniform_int_distribution<>(0, o.size()-1)},
-            run_prog{true}, run_tot{0}, num_elems{0} { }
+            run_prog{true}, average{0}, num_elems{0} { }
 
     char getRandomOperator() {
         return ops[distr(rng)];
@@ -220,10 +221,32 @@ void processSettings() {
 
 // Obtains hashed file from .data folder and adds it into history of user
 void processHistory() {
-    return;
+    long long avg;
+    int nume;
+    int dif, q1, q2, q3, op;
+    std::string data_file = ".data/" + std::to_string(alpha.hash) + ".txt";
+    auto in = std::ifstream(data_file.c_str());
+    // Opens file and populates data and q_diff with the questions to use.
+    if (in.is_open()) {
+        in >> avg >> nume;
+        alpha.average = avg;
+        alpha.num_elems = nume;
+        while (in >> dif >> q1 >> q2 >> q3 >> op) {
+            alpha.data.insert({ dif, q1, q2, q3, op });
+            alpha.q_diff.insert({ {q1, q2, op}, dif });
+        }
+        in.close();
+    }
 }
 
 void writeData() {
+    std::string data_file = ".data/" + std::to_string(alpha.hash) + ".txt";
+    auto of = std::ofstream(data_file.c_str());
+    of << alpha.average << ' ' << alpha.num_elems << '\n';
+    for (auto it = alpha.data.begin(); it != alpha.data.end(); it++) {
+        auto ar = *it;
+        of << ar[0] << ' ' << ar[1] << ' ' << ar[2] << ' ' << ar[3] << ' ' << ar[4] << '\n';
+    }
 }
 
 void shutdown() {
@@ -349,7 +372,7 @@ void run() {
             }
         }
         int q_end = duration_cast<milliseconds>(steady_clock::now() - q_begin).count();
-        long long avg = alpha.num_elems > 0 ? alpha.run_tot / alpha.num_elems : INT_MAX;
+        long long avg = alpha.num_elems > 0 ? alpha.average : INT_MAX;
 
         int time_over = avg < q_end ? q_end : 0;
         // If difficulty > 0, it means we took this element from the data array 
@@ -360,7 +383,7 @@ void run() {
                 std::cout << "\nCouldn't find data even though difficulty was set...\n";
                 exit(1);
             }
-            difficulty = std::max((difficulty * 2) / 3, incorrect_ct * INCORRECT_PENALTY + time_over);
+            difficulty = std::max((difficulty * 3) / 5, incorrect_ct * INCORRECT_PENALTY + time_over);
             alpha.data.erase(it);
             if (difficulty > avg) {
                 alpha.data.insert({ difficulty, question[0], question[1], question[2], (int)op });
@@ -382,7 +405,7 @@ void run() {
         }
 
         // Calibrate scores inside data array
-        alpha.run_tot += q_end;
+        alpha.average = (alpha.average * alpha.num_elems + q_end) / (alpha.num_elems + 1);
         alpha.num_elems++;
 
         ct++;
