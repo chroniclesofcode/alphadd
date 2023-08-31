@@ -8,8 +8,13 @@
 #include <stdio.h>
 #include <cctype>
 #include <limits>
+#include <set>
+#include <array>
+#include <map>
 
 using namespace std::chrono;
+
+#define INCORRECT_PENALTY 3000
 
 /*
     CLASSES
@@ -118,6 +123,15 @@ public:
 
     bool run_prog;
 
+    long long run_tot;
+    int num_elems;
+    
+    // Historical data store
+    // array = { difficulty, firstnum, rightnum, answer, operator(char) }
+    std::multiset<std::array<int,5>> data;
+    // Maps firstnum, rightnum, operator to the difficulty
+    std::map<std::array<int, 3>, int> q_diff;
+
     Alphadd() = default; // Default
 
     Alphadd(int hash, std::vector<char> o, int a1, int a2, int a3, int a4, int s1, int s2, int s3,
@@ -125,7 +139,7 @@ public:
             adder{AddGenerator(a1, a2, a3, a4)}, subber{SubGenerator(s1, s2, s3, s4, sd)},
             muller{MulGenerator(m1, m2, m3, m4)}, diver{DivGenerator(d1, d2, d3, d4)}, time_length{tlen},
             rng{std::mt19937(std::random_device()())}, distr{std::uniform_int_distribution<>(0, o.size()-1)},
-            run_prog{true} { }
+            run_prog{true}, run_tot{0}, num_elems{0} { }
 
     char getRandomOperator() {
         return ops[distr(rng)];
@@ -261,17 +275,35 @@ void run() {
     int ans = 0, inp = 0;
     bool keep_run = true;
     int score = 0;
+    int ct = 1;
     while (duration_cast<seconds>(steady_clock::now() - start_time).count() < alpha.time_length && keep_run) {
-        char op = alpha.getRandomOperator();
+        char op;
         std::vector<int> question;
-        if (op == '+') {
+        int difficulty = 0;
+        if (ct > 7 && ct % 3 == 0 && alpha.data.size()) {
+            // Grab the most 'difficult' number from data set
+            std::set<std::array<int,5>>::iterator it = alpha.data.begin();
+            difficulty = (*it)[0];
+            question = { (*it)[1], (*it)[2], (*it)[3] };
+            op = (char)(*it)[4];
+        } else {
+            // Random generate a set of numbers
+            op = alpha.getRandomOperator();
+
+            if (op == '+') {
             question = alpha.adder.generate();
-        } else if (op == '-') {
-            question = alpha.subber.generate();
-        } else if (op == '*') {
-            question = alpha.muller.generate();
-        } else if (op == '/') {
-            question = alpha.diver.generate();
+            } else if (op == '-') {
+                question = alpha.subber.generate();
+            } else if (op == '*') {
+                question = alpha.muller.generate();
+            } else if (op == '/') {
+                question = alpha.diver.generate();
+            }
+
+            auto it = alpha.q_diff.find({ question[0], question[1], (int)op });
+            if (it != alpha.q_diff.end()) {
+                difficulty = it->second;
+            }
         }
 
         if (question.size() != 3) {
@@ -281,6 +313,9 @@ void run() {
         ans = question[2];
         std::cout << "\n----  " << question[0] << ' ' << op << ' ' << question[1] << "  ----\n\n";
         std::cout << "      ";
+
+        // Start clock to measure the time taken to solve the question
+        time_point<steady_clock> q_begin = steady_clock::now();
 
         std::string tmp = "-1";
         inp = -1;
@@ -313,6 +348,44 @@ void run() {
                 score++;
             }
         }
+        int q_end = duration_cast<milliseconds>(steady_clock::now() - q_begin).count();
+        long long avg = alpha.num_elems > 0 ? alpha.run_tot / alpha.num_elems : INT_MAX;
+
+        int time_over = avg < q_end ? q_end : 0;
+        // If difficulty > 0, it means we took this element from the data array 
+        // since we haven't set the difficulty yet unless we found it first
+        if (difficulty > 0) {
+            auto it = alpha.data.find({ difficulty, question[0], question[1], question[2], (int)op });
+            if (it == alpha.data.end()) {
+                std::cout << "\nCouldn't find data even though difficulty was set...\n";
+                exit(1);
+            }
+            difficulty = std::max((difficulty * 2) / 3, incorrect_ct * INCORRECT_PENALTY + time_over);
+            alpha.data.erase(it);
+            if (difficulty > avg) {
+                alpha.data.insert({ difficulty, question[0], question[1], question[2], (int)op });
+            } 
+            auto it2 = alpha.q_diff.find({ question[0], question[1], (int)op });
+            if (it2 == alpha.q_diff.end()) {
+                std::cout << "\nCouldn't find element in qdiff for some reason...\n";
+                exit(1);
+            }
+            if (difficulty > avg) {
+                it2->second = difficulty;
+            } else {
+                alpha.q_diff.erase(it2);
+            }
+        } else if (time_over + incorrect_ct * INCORRECT_PENALTY > avg) {
+            difficulty = time_over + incorrect_ct * INCORRECT_PENALTY;
+            alpha.data.insert({ difficulty, question[0], question[1], question[2], (int)op });
+            alpha.q_diff.insert({ {question[0], question[1], (int)op}, difficulty });
+        }
+
+        // Calibrate scores inside data array
+        alpha.run_tot += q_end;
+        alpha.num_elems++;
+
+        ct++;
     }
 
     std::cout << "\n====  Results  ====\n\n";
@@ -327,8 +400,6 @@ void run() {
     if (nl != 'q') {
         alpha.run_prog = true;
     }
-
-
 }
 
 /*

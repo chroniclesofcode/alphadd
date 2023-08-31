@@ -5,7 +5,7 @@ Mental Arithmetic training program - designed to improve scores on Zetamac. All 
 
 Mental math arithmetic training game in the console. Allows addition, subtraction, multiplication, division. Provides configurable functionality to determine the number pairs you struggle with the most, and to show them more frequently, leading to targeted and thus faster improvement. Read the configuration section of the README to edit the 'config.txt' file in this folder to adjust the ranges. 
 
-Please try not to CTRL-C to exit the program - it will mess up the data saving portion. Instead, when you are solving, there are a couple commands you can type instead of entering a number:
+Please try not to CTRL-C to exit the program - it will mess up the data saving functionality. Instead, when you are solving, there are a couple commands you can type instead of entering a number:
 
 - 'q' which exits the program safely
 - 't' to display how much time is left
@@ -38,13 +38,18 @@ than the range of the second, or if the different is not as large as the min sub
 - The fifth line will contain 4 integers, first is the the range of the SOLUTION -> the number you will type in, second is the range of the DIVISOR. What will happen is we will do solution * divisor, then that will be your dividend (the number on the left). 
 - The sixth line will contain 1 integer, the amount of time one playthrough will take in seconds
 
+# Troubleshooting
+
+I am aware this program will have certain bugs, and not every case is accounted for. The numbers you input
+for your range cannot be too big (such that it exceeds 2^31, but I am sure noone is doing mental math at that scale...), and you theoretically should not take more than 2 weeks to solve a question on average. The point I am getting at is that - you can definitely break this program, but you won't if you are using it sensibly and not deliberately trying to break it. If your program just doesn't work for some reason, you can go into the .data folder and clear everything. For good measure, I have also included a defaultconfig.txt you can use if you want to reset config.txt as well. Resetting these will make sure the program starts in a default state. If you want to submit any improvements to the code, submit a pull request and I will review it.
+
 # How to run
 Usually I like to use a build tool for my C++ projects, but I know that may turn people off since you have to download CMake or 
 whatever. All you need is g++ in your command line and you can run this program with no hassles with a simple compilation - as a
 bonus - it will all be in one file so there's even less work (not necessarily best practices).
 
 ```
-g++ -o alphadd main.cpp -std=c++17
+g++ -std=c++17 -o alphadd main.cpp
 ```
 
 then run
