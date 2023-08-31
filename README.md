@@ -20,8 +20,8 @@ with certain combinations of numbers e.g. 15 - 7 or 13 - 8. Of course these are 
 hesistate for even just a moment during long calculations that involve these numbers. This program, over the course of many iterations, will discover
 which patterns of numbers you struggle with the most, and make them appear more frequently - thus targeting your weak points
 much more often, leading to faster improvement. As a disclaimer - there will not be any machine learning, just going to
-use some sort of statistical randomness to feed you the questions you struggled with more often the ones that you didn't.
-I like to call this micro spaced reptition. 
+use some sort of simple algorithm to feed you the questions you struggled with more often the ones that you didn't.
+I like to call this micro spaced repetition. 
 
 # Heuristics
 
