@@ -1,6 +1,19 @@
 # alphadd
 Mental Arithmetic training program - designed to improve scores on Zetamac. All in the console. Entirely in C++.
 
+# Features
+
+Mental math arithmetic training game in the console. Allows addition, subtraction, multiplication, division. Provides configurable functionality to determine the number pairs you struggle with the most, and to show them more frequently, leading to targeted and thus faster improvement. Read the configuration section of the README to edit the 'config.txt' file in this folder to adjust the ranges. 
+
+Please try not to CTRL-C to exit the program - it will mess up the data saving portion. Instead, when you are solving, there are a couple commands you can type instead of entering a number:
+
+- 'q' which exits the program safely
+- 't' to display how much time is left
+- 's' to display your current score
+- 'r' to quick restart the current game
+
+After the game has ended, you can either press ENTER to restart another session, or 'q' to exit the program.
+
 # Goals
 Targeted training for beginners to Zetamac who are looking to improve at a fast rate. I noticed that people usually struggle
 with certain combinations of numbers e.g. 15 - 7 or 13 - 8. Of course these are fairly easy to solve just by looking at them, but people may

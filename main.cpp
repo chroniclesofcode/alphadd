@@ -7,6 +7,7 @@
 #include <thread>
 #include <stdio.h>
 #include <cctype>
+#include <limits>
 
 using namespace std::chrono;
 
@@ -115,13 +116,16 @@ public:
     std::mt19937 rng;
     std::uniform_int_distribution<> distr;
 
+    bool run_prog;
+
     Alphadd() = default; // Default
 
     Alphadd(int hash, std::vector<char> o, int a1, int a2, int a3, int a4, int s1, int s2, int s3,
             int s4, int sd, int m1, int m2, int m3, int m4, int d1, int d2, int d3, int d4, int tlen) : hash{hash}, ops{o},
             adder{AddGenerator(a1, a2, a3, a4)}, subber{SubGenerator(s1, s2, s3, s4, sd)},
             muller{MulGenerator(m1, m2, m3, m4)}, diver{DivGenerator(d1, d2, d3, d4)}, time_length{tlen},
-            rng{std::mt19937(std::random_device()())}, distr{std::uniform_int_distribution<>(0, o.size()-1)} { }
+            rng{std::mt19937(std::random_device()())}, distr{std::uniform_int_distribution<>(0, o.size()-1)},
+            run_prog{true} { }
 
     char getRandomOperator() {
         return ops[distr(rng)];
@@ -205,6 +209,15 @@ void processHistory() {
     return;
 }
 
+void writeData() {
+}
+
+void shutdown() {
+    std::cout << "Exiting alphadd...\n";
+    writeData();
+    exit(0);
+}
+
 // Outer loop to process settings / history
 void configure() {
     std::cout << "Configuring settings..." << std::endl;
@@ -242,10 +255,13 @@ void confirm() {
 
 // Runs the main loop to generate questions and receive input
 void run() {
+    alpha.run_prog = false;
     time_point<steady_clock> start_time = steady_clock::now();
 
     int ans = 0, inp = 0;
-    while (duration_cast<seconds>(steady_clock::now() - start_time).count() < alpha.time_length) {
+    bool keep_run = true;
+    int score = 0;
+    while (duration_cast<seconds>(steady_clock::now() - start_time).count() < alpha.time_length && keep_run) {
         char op = alpha.getRandomOperator();
         std::vector<int> question;
         if (op == '+') {
@@ -265,18 +281,54 @@ void run() {
         ans = question[2];
         std::cout << "\n----  " << question[0] << ' ' << op << ' ' << question[1] << "  ----\n\n";
         std::cout << "      ";
-        std::cin >> inp;
+
+        std::string tmp = "-1";
+        inp = -1;
         // Wrong answer, add to database
         int incorrect_ct = 0;
-        std::string tmp;
         while (ans != inp) {
-            printf("\a");
-            std::cout << "\n     Incorrect    \n\n      ";
             std::cin >> tmp;
+            if (tmp == "r") {
+                alpha.run_prog = true;
+                keep_run = false;
+                std::cout << "\n    Restarting...\n";
+                break;
+            } else if (tmp == "q") {
+                shutdown();
+            } else if (tmp == "t") {
+                std::cout << "\n    " << alpha.time_length - duration_cast<seconds>(steady_clock::now() - start_time).count() << " seconds left\n\n      ";
+                inp = -1;
+                continue;
+            } else if (tmp == "s") {
+                std::cout << "\n    " << "Score: " << score << "\n\n      ";
+                inp = -1;
+                continue;
+            }
             inp = std::stoi(tmp);
-            incorrect_ct++;
+            if (ans != inp) {
+                printf("\a");
+                std::cout << "\n     Incorrect    \n\n      ";
+                incorrect_ct++;
+            } else {
+                score++;
+            }
         }
     }
+
+    std::cout << "\n====  Results  ====\n\n";
+    std::cout << "    Score: " << score << "\n\n";
+    std::cout << "    Time: " << alpha.time_length << " seconds\n\n";
+
+    std::cout << "Please type q to quit. ENTER to restart." << std::endl;
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<int>::max(), '\n');
+    char nl;
+    std::cin.get(nl);
+    if (nl != 'q') {
+        alpha.run_prog = true;
+    }
+
+
 }
 
 /*
@@ -287,6 +339,9 @@ int main(int argv, char **argc) {
     intro();
     configure();
     confirm();
-    run();
+    while(alpha.run_prog) {
+        run();
+        writeData();
+    }
     return 0;
 }
