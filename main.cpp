@@ -12,6 +12,7 @@
 #include <array>
 #include <map>
 #include <functional>
+#include <condition_variable>
 
 using namespace std::chrono;
 
@@ -290,16 +291,19 @@ void confirm() {
     std::cin.get(nl);
 }
 
-// Runs the main loop to generate questions and receive input
-void run() {
+// GLOBAL SCORE VAR
+int score = 0;
+std::condition_variable cv;
+
+void game_loop() {
     alpha.run_prog = false;
     time_point<steady_clock> start_time = steady_clock::now();
 
     int ans = 0, inp = 0;
     bool keep_run = true;
-    int score = 0;
+    score = 0;
     int ct = 1;
-    while (duration_cast<seconds>(steady_clock::now() - start_time).count() < alpha.time_length && keep_run) {
+    while (keep_run) {
         char op;
         std::vector<int> question;
         int difficulty = 0;
@@ -413,14 +417,25 @@ void run() {
 
         ct++;
     }
+}
+
+// Runs the main loop to generate questions and receive input
+void run() {
+    std::thread th(game_loop);
+    std::mutex mtx;
+    std::unique_lock<std::mutex> lck(mtx);
+
+    cv.wait_for(lck, std::chrono::seconds(alpha.time_length));
+    th.join();
+    std::cout << "yay!\n";
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<int>::max(), '\n');
 
     std::cout << "\n====  Results  ====\n\n";
     std::cout << "    Score: " << score << "\n\n";
     std::cout << "    Time: " << alpha.time_length << " seconds\n\n";
 
     std::cout << "Please type q to quit. ENTER to restart." << std::endl;
-    std::cin.clear();
-    std::cin.ignore(std::numeric_limits<int>::max(), '\n');
     char nl;
     std::cin.get(nl);
     if (nl != 'q') {
