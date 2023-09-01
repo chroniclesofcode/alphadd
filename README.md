@@ -43,6 +43,8 @@ than the range of the second, or if the different is not as large as the min sub
 I am aware this program will have certain bugs, and not every case is accounted for. The numbers you input
 for your range cannot be too big (such that it exceeds 2^31, but I am sure noone is doing mental math at that scale...), and you theoretically should not take more than 2 weeks to solve a question on average. The point I am getting at is that - you can definitely break this program, but you won't if you are using it sensibly and not deliberately trying to break it. If your program just doesn't work for some reason, you can go into the .data folder and clear everything. For good measure, I have also included a defaultconfig.txt you can use if you want to reset config.txt as well. Resetting these will make sure the program starts in a default state. If you want to submit any improvements to the code, submit a pull request and I will review it.
 
+I also know there's an issue where if you are on the last question, and the timer passes the limit, you will still be able to input the last answer. There are multiple solutions around it, e.g. multithreading, platform-specific fixes with key inputs. I'm not really too interested in these, I may implement the multithreading solution fix later.
+
 # How to run
 Usually I like to use a build tool for my C++ projects, but I know that may turn people off since you have to download CMake or 
 whatever. All you need is g++ in your command line and you can run this program with no hassles with a simple compilation - as a

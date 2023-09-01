@@ -309,10 +309,12 @@ void run() {
             difficulty = (*it)[0];
             question = { (*it)[1], (*it)[2], (*it)[3] };
             op = (char)(*it)[4];
+            std::cout << "OLD NUMBER TAKEN\n";
         } else {
             // Random generate a set of numbers
             op = alpha.getRandomOperator();
 
+            std::cout << "Random gen...\n";
             if (op == '+') {
             question = alpha.adder.generate();
             } else if (op == '-') {
@@ -325,6 +327,7 @@ void run() {
 
             auto it = alpha.q_diff.find({ question[0], question[1], (int)op });
             if (it != alpha.q_diff.end()) {
+                std::cout << "Random gen is not random :(\n";
                 difficulty = it->second;
             }
         }
