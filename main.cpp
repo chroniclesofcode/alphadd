@@ -309,12 +309,10 @@ void run() {
             difficulty = (*it)[0];
             question = { (*it)[1], (*it)[2], (*it)[3] };
             op = (char)(*it)[4];
-            std::cout << "OLD NUMBER TAKEN\n";
         } else {
             // Random generate a set of numbers
             op = alpha.getRandomOperator();
 
-            std::cout << "Random gen...\n";
             if (op == '+') {
             question = alpha.adder.generate();
             } else if (op == '-') {
@@ -327,7 +325,6 @@ void run() {
 
             auto it = alpha.q_diff.find({ question[0], question[1], (int)op });
             if (it != alpha.q_diff.end()) {
-                std::cout << "Random gen is not random :(\n";
                 difficulty = it->second;
             }
         }
@@ -352,7 +349,7 @@ void run() {
             if (tmp == "r") {
                 alpha.run_prog = true;
                 keep_run = false;
-                std::cout << "\n    Restarting...\n";
+                std::cout << "\n====  Restarting  ====\n";
                 break;
             } else if (tmp == "q") {
                 shutdown();
@@ -374,6 +371,7 @@ void run() {
                 score++;
             }
         }
+        if (!keep_run) break;
         int q_end = duration_cast<milliseconds>(steady_clock::now() - q_begin).count();
         long long avg = alpha.num_elems > 0 ? alpha.average : INT_MAX;
 
@@ -413,6 +411,7 @@ void run() {
 
         ct++;
     }
+    if (!keep_run) return;
 
     std::cout << "\n====  Results  ====\n\n";
     std::cout << "    Score: " << score << "\n\n";
@@ -425,6 +424,8 @@ void run() {
     std::cin.get(nl);
     if (nl != 'q') {
         alpha.run_prog = true;
+    } else {
+        alpha.run_prog = false;
     }
 }
 
