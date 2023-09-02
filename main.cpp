@@ -16,6 +16,7 @@
 using namespace std::chrono;
 
 #define INCORRECT_PENALTY 3000
+#define REPEAT_CYCLE 4
 
 /*
     CLASSES
@@ -303,7 +304,7 @@ void run() {
         char op;
         std::vector<int> question;
         int difficulty = 0;
-        if (ct > 7 && ct % 3 == 0 && alpha.data.size()) {
+        if (ct > REPEAT_CYCLE && ct % REPEAT_CYCLE == 0 && alpha.data.size()) {
             // Grab the most 'difficult' number from data set
             std::set<std::array<int,5>>::iterator it = alpha.data.begin();
             difficulty = (*it)[0];
