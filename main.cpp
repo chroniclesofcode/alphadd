@@ -13,6 +13,7 @@
 #include <map>
 #include <functional>
 #include <signal.h>
+#include <unistd.h>
 
 using namespace std::chrono;
 
@@ -298,6 +299,29 @@ void confirm() {
     std::cin.get(nl);
 }
 
+int kbhit(int secs)
+{
+    // timeout structure passed into select
+    struct timeval tv;
+    // fd_set passed into select
+    fd_set fds;
+    // Set up the timeout.  here we can wait for 1 second
+    tv.tv_sec = secs;
+    tv.tv_usec = 0;
+
+    // Zero out the fd_set - make sure it's pristine
+    FD_ZERO(&fds);
+    // Set the FD that we want to read
+    FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
+    // select takes the last file descriptor value + 1 in the fdset to check,
+    // the fdset for reads, writes, and errors.  We are only passing in reads.
+    // the last parameter is the timeout.  select will return if an FD is ready or 
+    // the timeout has occurred
+    select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
+    // return 0 if STDIN is not ready to be read.
+    return FD_ISSET(STDIN_FILENO, &fds);
+}
+
 // Runs the main loop to generate questions and receive input
 void run() {
     alpha.run_prog = false;
@@ -305,6 +329,8 @@ void run() {
 
     int ans = 0, inp = 0;
     bool keep_run = true;
+    bool show_results = true;
+    bool input_taken = false;
     int score = 0;
     int ct = 1;
     // Keep previous operator and question to not repeat questions
@@ -361,10 +387,21 @@ void run() {
         // Wrong answer, add to database
         int incorrect_ct = 0;
         while (ans != inp) {
-            std::cin >> tmp;
+            int time_left = alpha.time_length - duration_cast<seconds>(steady_clock::now() - start_time).count();
+            int has_input = kbhit(time_left);
+            if (has_input) {
+                std::cin >> tmp;
+                input_taken = true;
+            } else {
+                //alpha.run_prog = true;
+                keep_run = false;
+                break;
+            }
+
             if (tmp == "r") {
                 alpha.run_prog = true;
                 keep_run = false;
+                show_results = false;
                 std::cout << "\n====  Restarting  ====\n";
                 break;
             } else if (tmp == "q") {
@@ -434,15 +471,18 @@ void run() {
 
         ct++;
     }
-    if (!keep_run) return;
+    if (!keep_run && !show_results) return;
+
+    std::cin.clear();
+    if (input_taken) {
+        std::cin.ignore(std::numeric_limits<int>::max(), '\n');
+    }
 
     std::cout << "\n====  Results  ====\n\n";
     std::cout << "    Score: " << score << "\n\n";
     std::cout << "    Time: " << alpha.time_length << " seconds\n\n";
-
     std::cout << "Please type q to quit. ENTER to restart." << std::endl;
-    std::cin.clear();
-    std::cin.ignore(std::numeric_limits<int>::max(), '\n');
+
     char nl;
     std::cin.get(nl);
     if (nl != 'q') {
@@ -454,7 +494,7 @@ void run() {
 
 // Writes data when user presses CTRL-C
 void sigint_handler(int sigint) {
-    writeData();
+    shutdown();
     exit(0);
 }
 
@@ -471,5 +511,6 @@ int main(int argv, char **argc) {
         run();
         writeData();
     }
+    shutdown();
     return 0;
 }
