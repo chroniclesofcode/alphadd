@@ -192,6 +192,12 @@ void processSettings() {
     } else if (s2 < s3 + sdiff) {
         std::cout << "Your second range + the difference is greater than the first range for subtraction\n";
         exit(1);
+    } else if (s2 < s4) {
+        std::cout << "Your smaller range cannot have a larger number than your large range for subtraction\n";
+        exit(1);
+    } else if (s4 + sdiff > s2) {
+        std::cout << "The large value of your smaller range (RHS) for subtraction will never be reached because of sub difference.\n";
+        exit(1);
     } else if (a1 > a2 || a3 > a4) {
         std::cout << "Wrong ranges for addition (must be small -> large)\n";
         exit(1);
@@ -446,6 +452,7 @@ void run() {
     }
 }
 
+// Writes data when user presses CTRL-C
 void sigint_handler(int sigint) {
     writeData();
     exit(0);
