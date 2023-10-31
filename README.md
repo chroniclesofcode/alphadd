@@ -5,7 +5,7 @@ Mental Arithmetic training program - designed to improve scores on Zetamac. All 
 
 Mental math arithmetic training game in the console. Allows addition, subtraction, multiplication, division. Provides configurable functionality to determine the number pairs you struggle with the most, and to show them more frequently, leading to targeted and thus faster improvement. Read the configuration section of the README to edit the 'config.txt' file in this folder to adjust the ranges. 
 
-Please try not to CTRL-C to exit the program - it will mess up the data saving functionality. Instead, when you are solving, there are a couple commands you can type instead of entering a number:
+When you are solving, there are a couple commands you can type instead of entering a number:
 
 - 'q' which exits the program safely
 - 't' to display how much time is left
@@ -13,6 +13,7 @@ Please try not to CTRL-C to exit the program - it will mess up the data saving f
 - 'r' to quick restart the current game
 
 After the game has ended, you can either press ENTER to restart another session, or 'q' to exit the program.
+You can CTRL-C - and this will automatically write the data, but I would stick to 'q' for a 'safe' exit.
 
 # Goals
 Targeted training for beginners to Zetamac who are looking to improve at a fast rate. I noticed that people usually struggle

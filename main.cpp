@@ -12,6 +12,7 @@
 #include <array>
 #include <map>
 #include <functional>
+#include <signal.h>
 
 using namespace std::chrono;
 
@@ -191,6 +192,12 @@ void processSettings() {
     } else if (s2 < s3 + sdiff) {
         std::cout << "Your second range + the difference is greater than the first range for subtraction\n";
         exit(1);
+    } else if (s2 < s4) {
+        std::cout << "Your smaller range cannot have a larger number than your large range for subtraction\n";
+        exit(1);
+    } else if (s4 + sdiff > s2) {
+        std::cout << "The large value of your smaller range (RHS) for subtraction will never be reached because of sub difference.\n";
+        exit(1);
     } else if (a1 > a2 || a3 > a4) {
         std::cout << "Wrong ranges for addition (must be small -> large)\n";
         exit(1);
@@ -300,19 +307,27 @@ void run() {
     bool keep_run = true;
     int score = 0;
     int ct = 1;
+    // Keep previous operator and question to not repeat questions
+    char prevop = '?';
+    std::vector<int> prevq;
     while (duration_cast<seconds>(steady_clock::now() - start_time).count() < alpha.time_length && keep_run) {
         char op;
         std::vector<int> question;
         int difficulty = 0;
+        bool repeated = false;
         if (ct > REPEAT_CYCLE && ct % REPEAT_CYCLE == 0 && alpha.data.size()) {
             // Grab the most 'difficult' number from data set
             std::set<std::array<int,5>>::iterator it = alpha.data.begin();
             difficulty = (*it)[0];
             question = { (*it)[1], (*it)[2], (*it)[3] };
             op = (char)(*it)[4];
-        } else {
+            repeated = true;
+        }
+        
+        if (!repeated || (op == prevop && question == prevq)) {
             // Random generate a set of numbers
             op = alpha.getRandomOperator();
+            difficulty = 0;
 
             if (op == '+') {
             question = alpha.adder.generate();
@@ -385,8 +400,10 @@ void run() {
                 std::cout << "\nCouldn't find data even though difficulty was set...\n";
                 exit(1);
             }
+            // Lower penalty if fast, otherwise increase it to penalty.
             difficulty = std::max((difficulty * 3) / 5, incorrect_ct * INCORRECT_PENALTY + time_over);
             alpha.data.erase(it);
+            // Only insert if greater than average
             if (difficulty > avg) {
                 alpha.data.insert({ difficulty, question[0], question[1], question[2], (int)op });
             } 
@@ -401,6 +418,7 @@ void run() {
                 alpha.q_diff.erase(it2);
             }
         } else if (time_over + incorrect_ct * INCORRECT_PENALTY > avg) {
+            // New question, insert it with penalty.
             difficulty = time_over + incorrect_ct * INCORRECT_PENALTY;
             alpha.data.insert({ difficulty, question[0], question[1], question[2], (int)op });
             alpha.q_diff.insert({ {question[0], question[1], (int)op}, difficulty });
@@ -409,6 +427,10 @@ void run() {
         // Calibrate scores inside data array
         alpha.average = (alpha.average * alpha.num_elems + q_end) / (alpha.num_elems + 1);
         alpha.num_elems++;
+
+        // Set previous values
+        prevop = op;
+        prevq = std::move(question);
 
         ct++;
     }
@@ -430,6 +452,12 @@ void run() {
     }
 }
 
+// Writes data when user presses CTRL-C
+void sigint_handler(int sigint) {
+    writeData();
+    exit(0);
+}
+
 /*
     MAIN FUNCTION
 */
@@ -438,6 +466,7 @@ int main(int argv, char **argc) {
     intro();
     configure();
     confirm();
+    signal(SIGINT, sigint_handler);
     while(alpha.run_prog) {
         run();
         writeData();
