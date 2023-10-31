@@ -13,6 +13,7 @@ When you are solving, there are a couple commands you can type instead of enteri
 - 'r' to quick restart the current game
 
 After the game has ended, you can either press ENTER to restart another session, or 'q' to exit the program.
+You can CTRL-C - and this will automatically write the data, but I would stick to 'q' for a 'safe' exit.
 
 # Goals
 Targeted training for beginners to Zetamac who are looking to improve at a fast rate. I noticed that people usually struggle
