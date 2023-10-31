@@ -12,6 +12,7 @@
 #include <array>
 #include <map>
 #include <functional>
+#include <signal.h>
 
 using namespace std::chrono;
 
@@ -430,6 +431,11 @@ void run() {
     }
 }
 
+void sigint_handler(int sigint) {
+    writeData();
+    exit(0);
+}
+
 /*
     MAIN FUNCTION
 */
@@ -438,6 +444,7 @@ int main(int argv, char **argc) {
     intro();
     configure();
     confirm();
+    signal(SIGINT, sigint_handler);
     while(alpha.run_prog) {
         run();
         writeData();
